@@ -23,7 +23,7 @@ public class TestCase {
                 .setSalary(new BigDecimal("100000.00"))
                 .build();
         ByteBuffer bytes = user.toByteBuffer();
-        log.info("bytes: {}", Base64.getEncoder().encode(bytes.array()));
+        log.info("bytes: {}", new String(Base64.getEncoder().encode(bytes.array())));
         User rehydratedUser = User.fromByteBuffer(bytes);
         assertEquals(user, rehydratedUser);
     }
