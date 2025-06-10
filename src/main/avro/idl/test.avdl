@@ -1,0 +1,18 @@
+@namespace("io.github.dfauth.avro")
+protocol TestProtocol {
+
+  enum Status {
+    ACTIVE,
+    INACTIVE,
+    PENDING
+  } = INACTIVE;
+
+  record User {
+    string name;
+    int age;
+    Status status;
+    decimal(9,2) salary;
+    union { null, string } email = null;
+  }
+
+}
