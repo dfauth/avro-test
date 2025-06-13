@@ -23,7 +23,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <logback.version>1.5.15</logback.version>
-        <avro.version>1.12.0</avro.version>
+        <avro.version>1.11.4</avro.version>
     </properties>
 
     <dependencies>
@@ -100,6 +100,7 @@
                 <version>${avro.version}</version>
                 <executions>
                     <execution>
+                        <id>1</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>idl-protocol</goal>
@@ -108,8 +109,21 @@
                             <enableDecimalLogicalType>true</enableDecimalLogicalType>
                             <stringType>String</stringType>
                             <sourceDirectory>src/main/avro/idl/</sourceDirectory>
-                            <outputDirectory>${project.build.directory}/generated-sources/avro/</outputDirectory>
-                            <templateDirectory>${project.basedir}/src/main/avro/templates/</templateDirectory>
+                            <outputDirectory>${project.build.directory}/generated-sources/</outputDirectory>
+<!--                            <templateDirectory>${project.basedir}/src/main/avro/templates/</templateDirectory>-->
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>2</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>idl-protocol</goal>
+                        </goals>
+                        <configuration>
+                            <enableDecimalLogicalType>true</enableDecimalLogicalType>
+                            <stringType>String</stringType>
+                            <sourceDirectory>src/test/avro/idl/</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/generated-test-sources/</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

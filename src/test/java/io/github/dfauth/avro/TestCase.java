@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class TestCase {
 
     @Test
-    public void testIt() throws IOException {
+    public void testIt() {
         User user = User.newBuilder()
                 .setAge(21)
                 .setName("fred")

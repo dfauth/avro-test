@@ -1,0 +1,12 @@
+@namespace("io.github.dfauth.avro")
+protocol CollectionsProtocol {
+
+  record AvroMap {
+    map<bytes> entries = {};
+  }
+
+  record AvroList {
+    array<bytes> entries = [];
+  }
+
+}

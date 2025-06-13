@@ -2,9 +2,10 @@ package io.github.dfauth.avro;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.*;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
@@ -12,17 +13,70 @@ import org.apache.avro.specific.SpecificRecord;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
 
     @Override
     public T deserialize(Class<T> classOfT, byte[] data) {
+        return deserializeInternal(classOfT, data);
+    }
+
+    @Override
+    public Map<String, T> deserializeMap(Class<T> targetClass, byte[] data) {
+        return deserializeInternal(AvroMap.class, data).getEntries()
+                .entrySet()
+                .stream()
+                .<Map<String,T>>reduce(new HashMap<>(),
+                        (m,e) -> {
+                           m.put(e.getKey(), deserializeInternal(targetClass, e.getValue().array()));
+                           return m;
+                        },
+                        (l,r) -> l
+                        );
+    }
+
+    @Override
+    public byte[] serialize(T t) {
+        return serializeInternal(t);
+    }
+
+    @Override
+    public byte[] serializeMap(Map<String, T> map) {
+        return serializeInternal(AvroMap.newBuilder().setEntries(map.entrySet().stream().<Map<String,ByteBuffer>>reduce(new HashMap<String,ByteBuffer>(),
+                (b,e) -> {
+                    b.put(e.getKey(), ByteBuffer.wrap(serialize(e.getValue())));
+                    return b;
+                },
+                (l,r) -> Stream.concat(l.entrySet().stream(), r.entrySet().stream())
+                        .collect(Collectors.<Map.Entry<String,ByteBuffer>,String,ByteBuffer>toMap(Map.Entry::getKey, Map.Entry::getValue)))
+        ).build());
+    }
+
+    protected byte[] serializeInternal(SpecificRecord t) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            SpecificDatumWriter<SpecificRecord> datumWriter = new SpecificDatumWriter<>(t.getSchema());
+            Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+            datumWriter.write(t, encoder);
+            encoder.flush();
+            return out.toByteArray();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected <R extends SpecificRecord> R deserializeInternal(Class<R> classOfR, byte[] data) {
 
         try {
-            Schema schema = (Schema) classOfT.getField("SCHEMA$").get(classOfT);
+            Schema schema = (Schema) classOfR.getField("SCHEMA$").get(classOfR);
 
-            SpecificDatumReader<T> datumReader = new SpecificDatumReader<>(schema);
+            SpecificDatumReader<R> datumReader = new SpecificDatumReader<>(schema);
 
             // Create a BinaryDecoder to read the binary data
             BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
@@ -35,21 +89,6 @@ public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
         } catch (NoSuchFieldException e) {
             log.error(e.getMessage(), e);
             throw new RuntimeException(e);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public byte[] serialize(T t) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            SpecificDatumWriter<SpecificRecord> datumWriter = new SpecificDatumWriter<>(t.getSchema());
-            Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-            datumWriter.write(t, encoder);
-            encoder.flush();
-            return out.toByteArray();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new RuntimeException(e);

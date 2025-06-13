@@ -15,4 +15,20 @@ protocol TestProtocol {
     union { null, string } email = null;
   }
 
+  record CurrencyPair {
+     string base;
+     string alt;
+  }
+
+  record CurrencyPairV2 {
+     string base;
+     string alt;
+  }
+
+  record CurrencyPairV3 {
+     string base;
+     string alt;
+     string anotherField;
+  }
+
 }
