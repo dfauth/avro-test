@@ -10,3 +10,6 @@ This deserializer will handle such cases
 the long read case works in the default deserialzer already so no need to handle
 
 Of course to do this correctly you need to use a schema registry
+
+
+for details see the [test cases](https://github.com/dfauth/avro-test/tree/master/src/test/java/io/github/dfauth/avro)
