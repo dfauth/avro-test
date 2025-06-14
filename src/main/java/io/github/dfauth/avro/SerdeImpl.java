@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,17 +26,17 @@ public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
     }
 
     @Override
-    public Map<String, T> deserializeMap(Class<T> targetClass, byte[] data) {
+    public <R> Map<String, R> deserializeMap(byte[] data, Function<byte[], R> converter) {
         return deserializeInternal(AvroMap.class, data).getEntries()
                 .entrySet()
                 .stream()
-                .<Map<String,T>>reduce(new HashMap<>(),
+                .<Map<String,R>>reduce(new HashMap<>(),
                         (m,e) -> {
-                           m.put(e.getKey(), deserializeInternal(targetClass, e.getValue().array()));
+                           m.put(e.getKey(), converter.apply(e.getValue().array()));
                            return m;
                         },
                         (l,r) -> Stream.concat(l.entrySet().stream(), r.entrySet().stream())
-                                .collect(Collectors.<Map.Entry<String,T>,String,T>toMap(Map.Entry::getKey, Map.Entry::getValue))
+                                .collect(Collectors.<Map.Entry<String,R>,String,R>toMap(Map.Entry::getKey, Map.Entry::getValue))
                         );
     }
 
@@ -58,15 +59,11 @@ public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
     }
 
     @Override
-    public byte[] serializeMap(Map<String, T> map) {
-        return serializeInternal(AvroMap.newBuilder().setEntries(map.entrySet().stream().<Map<String,ByteBuffer>>reduce(new HashMap<String,ByteBuffer>(),
-                (b,e) -> {
-                    b.put(e.getKey(), ByteBuffer.wrap(serialize(e.getValue())));
-                    return b;
-                },
-                (l,r) -> Stream.concat(l.entrySet().stream(), r.entrySet().stream())
-                        .collect(Collectors.<Map.Entry<String,ByteBuffer>,String,ByteBuffer>toMap(Map.Entry::getKey, Map.Entry::getValue)))
-        ).build());
+    public <R> byte[] serializeMap(Map<String, R> map, Function<R,byte[]> converter) {
+        return serializeInternal(AvroMap.newBuilder().setEntries(map.entrySet().stream()
+                .map(e -> Map.entry(e.getKey(), ByteBuffer.wrap(converter.apply(e.getValue()))))
+                .collect(Collectors.<Map.Entry<String,ByteBuffer>,String,ByteBuffer>toMap(Map.Entry::getKey, Map.Entry::getValue))).build()
+        );
     }
 
     @Override
