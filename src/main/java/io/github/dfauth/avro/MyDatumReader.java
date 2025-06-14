@@ -8,6 +8,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Arrays;
 
 @Slf4j
 @AllArgsConstructor
@@ -18,26 +19,24 @@ public class MyDatumReader<T> extends SpecificDatumReader<T> {
 
     protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
         Object record = getData().newRecord(old, expected);
-        Object state = null; // getData().getRecordState(record, expected);
-        Schema.Field[] var6 = in.readFieldOrder();
-        int var7 = var6.length;
 
-        for(int var8 = 0; var8 < var7; ++var8) {
-            Schema.Field field = var6[var8];
-            int pos = field.pos();
-            String name = field.name();
-            Object oldDatum = null;
-            if (old != null) {
-                oldDatum = null; // getData().getField(record, name, pos, state);
-            }
-
-            try {
-                this.readField(record, field, oldDatum, in, state);
-            } catch (EOFException e) {
-                break;
-            }
-        }
-
-        return record;
+        return Arrays.stream(in.readFieldOrder())
+                .reduce(record, (r, f) -> {
+                        try {
+                            MyDatumReader.this.readField(r, f, null, in, null);
+                            return r;
+                        } catch (EOFException e) {
+                            // EOFException indicates a short avro object:
+                            // ie. an earlier version of this object
+                            // we ignore the exception and allow processing to continue
+                            // to populate the properties we have
+                            return r;
+                        } catch (IOException e) {
+                            log.error(e.getMessage(), e);
+                            throw new RuntimeException(e);
+                        }
+                    },
+                    (l,r) -> l
+                );
     }
 }
