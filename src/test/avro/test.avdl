@@ -17,17 +17,17 @@ protocol TestProtocol {
 
   record CurrencyPair {
      string base;
-     string alt;
+     string term;
   }
 
   record CurrencyPairV2 {
      string base;
-     string alt;
+     string term;
   }
 
   record CurrencyPairV3 {
      string base;
-     string alt;
+     string term;
      string anotherField;
   }
 

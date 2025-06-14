@@ -2,11 +2,7 @@ package io.github.dfauth.avro;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.io.*;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 
@@ -103,7 +99,7 @@ public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
         try {
             Schema schema = (Schema) classOfR.getField("SCHEMA$").get(classOfR);
 
-            SpecificDatumReader<R> datumReader = new SpecificDatumReader<>(schema);
+            DatumReader<R> datumReader = new MyDatumReader<>(schema);
 
             // Create a BinaryDecoder to read the binary data
             BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);

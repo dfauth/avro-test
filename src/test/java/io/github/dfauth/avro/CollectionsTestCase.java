@@ -19,7 +19,7 @@ public class CollectionsTestCase {
 
         Serde<CurrencyPair> serde = new SerdeImpl<>();
 
-        Map<String,CurrencyPair> src = Map.of("EUR/USD", CurrencyPair.newBuilder().setBase("EUR").setAlt("USD").build());
+        Map<String,CurrencyPair> src = Map.of("EUR/USD", CurrencyPair.newBuilder().setBase("EUR").setTerm("USD").build());
         byte[] bytes = serde.serializeMap(src);
         log.info("bytes: {}", new String(Base64.getEncoder().encode(bytes)));
         Map<String,CurrencyPair> dest = serde.deserializeMap(CurrencyPair.class, bytes);
@@ -31,7 +31,7 @@ public class CollectionsTestCase {
 
         Serde<CurrencyPair> serde = new SerdeImpl<>();
 
-        List<CurrencyPair> src = List.of(CurrencyPair.newBuilder().setBase("EUR").setAlt("USD").build());
+        List<CurrencyPair> src = List.of(CurrencyPair.newBuilder().setBase("EUR").setTerm("USD").build());
         byte[] bytes = serde.serializeList(src);
         log.info("bytes: {}", new String(Base64.getEncoder().encode(bytes)));
         List<CurrencyPair> dest = serde.deserializeList(CurrencyPair.class, bytes);
