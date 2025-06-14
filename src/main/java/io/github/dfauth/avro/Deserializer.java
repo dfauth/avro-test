@@ -16,5 +16,9 @@ public interface Deserializer<T extends SpecificRecord> {
 
     <R> Map<String,R> deserializeMap(byte[] bytes, Function<byte[], R> converter);
 
-    List<T> deserializeList(Class<T> currencyPairClass, byte[] bytes);
+    default List<T> deserializeList(Class<T> classOfT, byte[] bytes) {
+        return deserializeList(bytes, t -> deserialize(classOfT, t));
+    }
+
+    <R> List<R> deserializeList(byte[] bytes, Function<byte[], R> converter);
 }

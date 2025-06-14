@@ -48,4 +48,16 @@ public class CollectionsTestCase {
         assertEquals(src, dest);
     }
 
+    @Test
+    public void testListOfMap() {
+
+        Serde<CurrencyPair> serde = new SerdeImpl<>();
+
+        List<Map<String, CurrencyPair>> src = List.of(Map.of("EUR/USD", CurrencyPair.newBuilder().setBase("EUR").setTerm("USD").build()));
+        byte[] bytes = serde.serializeList(src, serde::serializeMap);
+        log.info("bytes: {}", new String(Base64.getEncoder().encode(bytes)));
+        List<Map<String, CurrencyPair>> dest = serde.deserializeList(bytes, b -> serde.deserializeMap(CurrencyPair.class, b));
+        assertEquals(src, dest);
+    }
+
 }

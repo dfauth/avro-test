@@ -41,12 +41,12 @@ public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
     }
 
     @Override
-    public List<T> deserializeList(Class<T> targetClass, byte[] data) {
+    public <R> List<R> deserializeList(byte[] data, Function<byte[],R> converter) {
         return deserializeInternal(AvroList.class, data).getEntries()
                 .stream()
-                .<List<T>>reduce(new ArrayList<>(),
+                .<List<R>>reduce(new ArrayList<>(),
                         (l,e) -> {
-                            l.add(deserializeInternal(targetClass, e.array()));
+                            l.add(converter.apply(e.array()));
                             return l;
                         },
                         (l,r) -> Stream.concat(l.stream(), r.stream()).toList()
@@ -67,10 +67,10 @@ public class SerdeImpl<T extends SpecificRecord> implements Serde<T> {
     }
 
     @Override
-    public byte[] serializeList(List<T> list) {
+    public <R> byte[] serializeList(List<R> list, Function<R,byte[]> converter) {
         return serializeInternal(AvroList.newBuilder().setEntries(list.stream().<List<ByteBuffer>>reduce(new ArrayList<>(),
                 (b,e) -> {
-                    b.add(ByteBuffer.wrap(serialize(e)));
+                    b.add(ByteBuffer.wrap(converter.apply(e)));
                     return b;
                 },
                 (l,r) -> Stream.concat(l.stream(), r.stream()).toList())

@@ -16,12 +16,10 @@ public interface Serializer<T extends SpecificRecord> {
 
     <R> byte[] serializeMap(Map<String, R> map, Function<R,byte[]> converter);
 
-    byte[] serializeList(List<T> src);
-
-    default <R> byte[] serializeList(List<R> map, Function<R,T> converter) {
-        return serializeList(map.stream()
-                .map(converter)
-                .toList());
+    default byte[] serializeList(List<T> src) {
+        return serializeList(src, this::serialize);
     }
+
+    <R> byte[] serializeList(List<R> map, Function<R,byte[]> converter);
 
 }
